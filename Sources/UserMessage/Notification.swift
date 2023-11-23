@@ -7,34 +7,36 @@
 
 import Foundation
 
-public enum UserMessageLevel {
-    case info
-    case error
-}
 
 public extension Notification.Name {
     static let userMessage = Notification.Name("package.UserMessage")
-    // NOTE: userInfo ["UserMessage.Text": LocalizedStringResource, "UserMessage.Level": UserMessageLevel ?? .info]
+    // NOTE: userInfo should be ["message": UserMessage]
 }
 
+let userInfoKey = "UserMessage.message"
+
 public extension Error {
-    func showUser(message: String? = nil) {
+    func showUser(message: LocalizedStringResource? = nil) {
+        let text: UserMessage.TextType = if let message {
+            .localized(message)
+        } else {
+            .verbatim(localizedDescription)
+        }
         NotificationCenter.default
-            .post(name: .userMessage, object: nil, userInfo: ["UserMessage.Text": message ?? localizedDescription,
-                                                              "UserMessage.Level": UserMessageLevel.error] as? [String: Any])
+            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: text, level: .error)])
     }
 }
 
 public extension String {
     func showUser() {
         NotificationCenter.default
-            .post(name: .userMessage, object: nil, userInfo: ["UserMessage.Text": self,
-                                                              "UserMessage.Level": UserMessageLevel.info] as? [String: Any])
+            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: .verbatim(self), level: .info)])
     }
 }
 
 public extension LocalizedStringResource {
     func showUser() {
-        self.key.showUser()
+        NotificationCenter.default
+            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: .localized(self), level: .info)])
     }
 }

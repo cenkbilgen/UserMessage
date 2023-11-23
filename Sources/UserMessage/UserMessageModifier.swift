@@ -15,41 +15,52 @@ public struct ShowUserMessageModifier: ViewModifier {
     public var allowDuplicateMessages = false
     public var multipleMessageAlignment: HorizontalAlignment = .center
 
-    @State private var messages: [(LocalizedStringResource, level: UserMessageLevel)] = []
+    @State private var messages: [UserMessage] = []
+
+    public init(notificationName: Notification.Name = .userMessage,
+                duration: Duration = .seconds(6),
+                location: VerticalAlignment = .top,
+                color: Color = .blue,
+                allowDuplicateMessages: Bool = true,
+                multipleMessageAlignment: HorizontalAlignment = .center) {
+        self.notificationName = notificationName
+        self.duration = duration
+        self.location = location
+        self.color = color
+        self.allowDuplicateMessages = allowDuplicateMessages
+        self.multipleMessageAlignment = multipleMessageAlignment
+    }
 
     public func body(content: Content) -> some View {
         content
-            .onReceive(NotificationCenter.default.publisher(for: notificationName)
-                .filter {
-                    $0.name == .userMessage
-                }) { notification in
-                guard let text = notification.userInfo?["UserMessage.Text"] as? LocalizedStringResource else {
+            .onReceive(NotificationCenter.default.publisher(for: notificationName)) { notification in
+                print("Got Notification")
+                guard let message = notification.userInfo?[userInfoKey] as? UserMessage else {
                     print("Unexpected UserMessage UserInfo")
                     return
                 }
-                let level = notification.userInfo?["UserMessage.Level"] as? UserMessageLevel ?? .info
-                if allowDuplicateMessages || messages.contains(where: {
-                    $0.0 == text && $0.1 == level
+                if allowDuplicateMessages || !messages.contains(where: {
+                    message.matches($0)
                 }) {
-                    messages.append((text, level))
-                }
-                Task {
-                    try await Task.sleep(for: duration, tolerance: .seconds(0.5), clock: .continuous)
-                    messages.removeFirst()
+                    print("Adding to messages")
+                    messages.append(message)
                 }
             }
             .overlay(alignment: Alignment(horizontal: multipleMessageAlignment, vertical: location)) {
-                VStack(alignment:  multipleMessageAlignment) {
-                    ForEach(messages.indices, id: \.self) { index in
-                        let text = messages[0].0
-                        let isError = messages[index].level == .error // just differentiating errors
-                        UserMessage(text: text,
-                                    color: isError ? .red : color,
-                                    shape: Rectangle())
-                        .transition(.asymmetric(insertion: .opacity
-                            .animation(.easeInOut(duration: 0.1)),
-                                                removal: .opacity
-                            .animation(.easeOut(duration: 0.8))))
+                VStack {
+                    ForEach(messages) { message in
+                        let isError = message.level == .error // just differentiating errors
+                        UserMessageView(message: message,
+                                        color: isError ? .red : color,
+                                        shape: Rectangle())
+                        .task {
+                            try? await Task.sleep(for: duration)
+                            withAnimation(.spring()) {
+                                messages.removeAll {
+                                    $0.id == message.id
+                                }
+                            }
+                        }
                     }
                 }
             }
