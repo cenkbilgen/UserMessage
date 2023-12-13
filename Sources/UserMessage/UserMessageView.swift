@@ -11,6 +11,13 @@ public struct UserMessageView<S: Shape>: View {
     let message: UserMessage
     let color: Color
     var shape: S
+
+    public init(message: UserMessage, color: Color = .green, shape: S) {
+        self.message = message
+        self.color = color
+        self.shape = shape
+    }
+
     public var body: some View {
         TextView(text: message.text)
             .padding(.vertical, 4)

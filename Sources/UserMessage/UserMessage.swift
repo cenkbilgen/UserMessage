@@ -33,6 +33,15 @@ public struct UserMessage: Identifiable {
     }
     public let level: Level
 
+    public var string: String {
+        switch text {
+            case .verbatim(let string):
+                return string
+            case .localized(let resource):
+                return String(localized: resource)
+        }
+    }
+
     // public var duration: Duration? // Custom duration per message
 }
 

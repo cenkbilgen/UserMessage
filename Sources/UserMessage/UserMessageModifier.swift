@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-public struct ShowUserMessageModifier: ViewModifier {
+public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public var notificationName: Notification.Name = .userMessage
     public var duration: Duration = .seconds(6)
     public var location: VerticalAlignment = .top
     public var color: Color = .green
     public var allowDuplicateMessages = false
     public var multipleMessageAlignment: HorizontalAlignment = .center
+    @ViewBuilder public var messageView: (UserMessage) -> V
 
     @State private var messages: [UserMessage] = []
 
@@ -22,13 +23,17 @@ public struct ShowUserMessageModifier: ViewModifier {
                 location: VerticalAlignment = .top,
                 color: Color = .blue,
                 allowDuplicateMessages: Bool = true,
-                multipleMessageAlignment: HorizontalAlignment = .center) {
+                multipleMessageAlignment: HorizontalAlignment = .center,
+                messageView: @escaping (UserMessage) -> V =  { m in
+        UserMessageView(message: m, color: .green, shape: Rectangle())
+    }) {
         self.notificationName = notificationName
         self.duration = duration
         self.location = location
         self.color = color
         self.allowDuplicateMessages = allowDuplicateMessages
         self.multipleMessageAlignment = multipleMessageAlignment
+        self.messageView = messageView
     }
 
     public func body(content: Content) -> some View {
@@ -50,9 +55,8 @@ public struct ShowUserMessageModifier: ViewModifier {
                 VStack {
                     ForEach(messages) { message in
                         let isError = message.level == .error // just differentiating errors
-                        UserMessageView(message: message,
-                                        color: isError ? .red : color,
-                                        shape: Rectangle())
+                        // TODO: Let generic view handle it
+                        messageView(message)
                         .task {
                             try? await Task.sleep(for: duration)
                             withAnimation(.spring()) {
