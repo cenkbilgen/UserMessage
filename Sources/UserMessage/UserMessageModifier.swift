@@ -11,7 +11,7 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public var notificationName: Notification.Name = .userMessage
     public var duration: Duration = .seconds(6)
     public var location: VerticalAlignment = .top
-    public var color: Color = .green
+    public let colors: [UserMessage.Level: Color]
     public var allowDuplicateMessages = false
     public var multipleMessageAlignment: HorizontalAlignment = .center
     @ViewBuilder public var messageView: (UserMessage) -> V
@@ -21,16 +21,14 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public init(notificationName: Notification.Name = .userMessage,
                 duration: Duration = .seconds(6),
                 location: VerticalAlignment = .top,
-                color: Color = .blue,
+                colors: [UserMessage.Level: Color] = [.info: .gray, .error: .red],
                 allowDuplicateMessages: Bool = true,
                 multipleMessageAlignment: HorizontalAlignment = .center,
-                messageView: @escaping (UserMessage) -> V =  { m in
-        UserMessageView(message: m, color: .green, shape: Rectangle())
-    }) {
+                messageView: @escaping (UserMessage) -> V) {
         self.notificationName = notificationName
         self.duration = duration
         self.location = location
-        self.color = color
+        self.colors = colors
         self.allowDuplicateMessages = allowDuplicateMessages
         self.multipleMessageAlignment = multipleMessageAlignment
         self.messageView = messageView
@@ -54,9 +52,8 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
             .overlay(alignment: Alignment(horizontal: multipleMessageAlignment, vertical: location)) {
                 VStack {
                     ForEach(messages) { message in
-                        let isError = message.level == .error // just differentiating errors
-                        // TODO: Let generic view handle it
-                        messageView(message)
+                        // messageView(message)
+                        UserMessageView(text: message.text, color: colors[message.level, default: .gray], shape: RoundedRectangle(cornerRadius: 4))
                         .task {
                             try? await Task.sleep(for: duration)
                             withAnimation(.spring()) {
@@ -67,6 +64,8 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                         }
                     }
                 }
+                .padding(.horizontal)
+                // .containerRelativeFrame(.horizontal)
             }
     }
 }

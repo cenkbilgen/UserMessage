@@ -27,7 +27,7 @@ public struct UserMessage: Identifiable {
     }
     public let text: TextType
 
-    public enum Level {
+    public enum Level: Hashable {
         case info
         case error
     }

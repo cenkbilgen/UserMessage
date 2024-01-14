@@ -8,23 +8,23 @@
 import SwiftUI
 
 public struct UserMessageView<S: Shape>: View {
-    let message: UserMessage
+    let text: UserMessage.TextType
     let color: Color
     var shape: S
 
-    public init(message: UserMessage, color: Color = .green, shape: S) {
-        self.message = message
+    public init(text: UserMessage.TextType, color: Color, shape: S) {
+        self.text = text
         self.color = color
         self.shape = shape
     }
 
     public var body: some View {
-        TextView(text: message.text)
+        TextView(text: text)
             .padding(.vertical, 4)
             .padding(.horizontal)
-            .background(color.shadow(.drop(radius: 2)), in: shape)
+            .background(color.opacity(0.9), in: shape)
             .overlay(shape
-                .stroke(.primary, lineWidth: 1))
+                .stroke(color, lineWidth: 2))
     }
 
     struct TextView: View {
@@ -40,15 +40,39 @@ public struct UserMessageView<S: Shape>: View {
                 }
             }
                 .font(font)
-                .foregroundStyle(.shadow(.drop(color: .secondary, radius: 6)))
+                // .foregroundStyle(.shadow(.drop(color: .secondary, radius: 6)))
         }
     }
 }
 
 #Preview {
-    UserMessageView(message: UserMessage(text: .verbatim("Hello"), level: .info), color: .gray, shape: Rectangle())
+    UserMessageView(text: .verbatim(CocoaError(.fileReadNoSuchFile).localizedDescription),
+                    color: .green,
+                    shape: Rectangle())
+    .environment(\.userMessageFont, .body.bold())
 }
 
+// Message Color
+
+struct UserMessageColors: EnvironmentKey {
+    static let defaultValue: [UserMessage.Level: Color] = [
+        .info: .accentColor,
+        .error: .red
+    ]
+}
+
+extension EnvironmentValues {
+    var userMessageColors: [UserMessage.Level: Color] {
+        get {
+            self[UserMessageColors.self]
+        }
+        set {
+            self[UserMessageColors.self] = newValue
+        }
+    }
+}
+
+// Message Font
 
 struct UserMessageFont: EnvironmentKey {
     static let defaultValue = Font.body
