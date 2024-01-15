@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-public struct UserMessageView<S: Shape>: View {
+public struct UserMessageView<S: Shape, T: ShapeStyle>: View {
     let text: UserMessage.TextType
-    let color: Color
+    let style: T
     var shape: S
 
-    public init(text: UserMessage.TextType, color: Color, shape: S) {
+    public init(text: UserMessage.TextType, backgroundStyle: T, shape: S) {
         self.text = text
-        self.color = color
+        self.style = backgroundStyle
         self.shape = shape
     }
 
@@ -22,9 +22,9 @@ public struct UserMessageView<S: Shape>: View {
         TextView(text: text)
             .padding(.vertical, 4)
             .padding(.horizontal)
-            .background(color.opacity(0.9), in: shape)
+            .background(style.opacity(0.9), in: shape)
             .overlay(shape
-                .stroke(color, lineWidth: 2))
+                .stroke(style, lineWidth: 2))
     }
 
     struct TextView: View {
@@ -47,7 +47,7 @@ public struct UserMessageView<S: Shape>: View {
 
 #Preview {
     UserMessageView(text: .verbatim(CocoaError(.fileReadNoSuchFile).localizedDescription),
-                    color: .green,
+                    backgroundStyle: .regularMaterial,
                     shape: Rectangle())
     .environment(\.userMessageFont, .body.bold())
 }

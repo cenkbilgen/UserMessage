@@ -53,7 +53,7 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                 VStack {
                     ForEach(messages) { message in
                         // messageView(message)
-                        UserMessageView(text: message.text, color: colors[message.level, default: .gray], shape: RoundedRectangle(cornerRadius: 4))
+                        UserMessageView(text: message.text, backgroundStyle: colors[message.level, default: .gray], shape: RoundedRectangle(cornerRadius: 4))
                         .task {
                             try? await Task.sleep(for: duration)
                             withAnimation(.spring()) {
