@@ -8,31 +8,25 @@
 import SwiftUI
 
 public struct ShowUserMessageModifier<V: View>: ViewModifier {
-    public var notificationName: Notification.Name = .userMessage
-    public var duration: Duration = .seconds(6)
-    public var location: VerticalAlignment = .top
-    public let colors: [UserMessage.Level: Color]
-    public var allowDuplicateMessages = false
-    public var multipleMessageAlignment: HorizontalAlignment = .center
+    public let notificationName: Notification.Name
+    public let backgroundStyles: [UserMessage.Level: any ShapeStyle]
+    public let location: VerticalAlignment
+    public let duration: Duration
+    public let allowDuplicateMessages: Bool
+    public let multipleMessageAlignment: HorizontalAlignment
     @ViewBuilder public var messageView: (UserMessage) -> V
 
-    @State private var messages: [UserMessage] = []
-
-    public init(notificationName: Notification.Name = .userMessage,
-                duration: Duration = .seconds(6),
-                location: VerticalAlignment = .top,
-                colors: [UserMessage.Level: Color] = [.info: .gray, .error: .red],
-                allowDuplicateMessages: Bool = true,
-                multipleMessageAlignment: HorizontalAlignment = .center,
-                messageView: @escaping (UserMessage) -> V) {
+    public init(notificationName: Notification.Name, backgroundStyles: [UserMessage.Level : any ShapeStyle], location: VerticalAlignment, duration: Duration, allowDuplicateMessages: Bool, multipleMessageAlignment: HorizontalAlignment, messageView: @escaping (UserMessage) -> V) {
         self.notificationName = notificationName
-        self.duration = duration
+        self.backgroundStyles = backgroundStyles
         self.location = location
-        self.colors = colors
+        self.duration = duration
         self.allowDuplicateMessages = allowDuplicateMessages
         self.multipleMessageAlignment = multipleMessageAlignment
         self.messageView = messageView
     }
+
+    @State private var messages: [UserMessage] = []
 
     public func body(content: Content) -> some View {
         content
@@ -53,19 +47,60 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                 VStack {
                     ForEach(messages) { message in
                         // messageView(message)
-                        UserMessageView(text: message.text, backgroundStyle: colors[message.level, default: .gray], shape: RoundedRectangle(cornerRadius: 4))
-                        .task {
-                            try? await Task.sleep(for: duration)
-                            withAnimation(.spring()) {
-                                messages.removeAll {
-                                    $0.id == message.id
+                        messageView(message)
+                            .task {
+                                try? await Task.sleep(for: duration)
+                                withAnimation(.spring()) {
+                                    messages.removeAll {
+                                        $0.id == message.id
+                                    }
                                 }
                             }
-                        }
                     }
                 }
                 .padding(.horizontal)
                 // .containerRelativeFrame(.horizontal)
             }
+    }
+}
+
+public extension View {
+    func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
+                                           location: VerticalAlignment = .top,
+                                           duration: Duration = .seconds(6),
+                                           allowDuplicateMessages: Bool = true,
+                                           multipleMessageAlignment: HorizontalAlignment = .center,
+                                           @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
+        modifier(ShowUserMessageModifier(notificationName: notificationName,
+                                         backgroundStyles: [:], // let the customized messageView handle background style
+                                         location: location,
+                                         duration: duration,
+                                         allowDuplicateMessages: allowDuplicateMessages,
+                                         multipleMessageAlignment: .center,
+                                         messageView: messageView))
+    }
+
+    func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
+                                                   backgroundStyles: [UserMessage.Level: any ShapeStyle] = [.info: .bar, .error: .bar],
+                                                   location: VerticalAlignment = .top,
+                                                   duration: Duration = .seconds(6),
+                                                   allowDuplicateMessages: Bool = true,
+                                                   multipleMessageAlignment: HorizontalAlignment = .center) -> some View {
+        modifier(ShowUserMessageModifier(notificationName: notificationName,
+                                         backgroundStyles: backgroundStyles,
+                                         location: location,
+                                         duration: duration,
+                                         allowDuplicateMessages: allowDuplicateMessages,
+                                         multipleMessageAlignment: .center) { message in
+//            if let style = backgroundStyles[message.level] {
+                UserMessageView(text: message.text,
+                                backgroundStyle: .bar, // TODO
+                                shape: RoundedRectangle(cornerRadius: 4))
+//            } else {
+//                UserMessageView(text: message.text,
+//                                backgroundStyle: .bar,
+//                                shape: RoundedRectangle(cornerRadius: 4))
+//            }
+        })
     }
 }

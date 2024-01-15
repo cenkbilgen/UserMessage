@@ -22,9 +22,10 @@ public struct UserMessageView<S: Shape, T: ShapeStyle>: View {
         TextView(text: text)
             .padding(.vertical, 4)
             .padding(.horizontal)
-            .background(style.opacity(0.9), in: shape)
-            .overlay(shape
-                .stroke(style, lineWidth: 2))
+            .background(style)
+            .opacity(0.9)
+//            .overlay(shape
+//                .stroke(style, lineWidth: 2))
     }
 
     struct TextView: View {
@@ -40,15 +41,14 @@ public struct UserMessageView<S: Shape, T: ShapeStyle>: View {
                 }
             }
                 .font(font)
-                // .foregroundStyle(.shadow(.drop(color: .secondary, radius: 6)))
         }
     }
 }
 
 #Preview {
     UserMessageView(text: .verbatim(CocoaError(.fileReadNoSuchFile).localizedDescription),
-                    backgroundStyle: .regularMaterial,
-                    shape: Rectangle())
+                    backgroundStyle: .linearGradient(colors: [.green, .green, .green.opacity(0.7)], startPoint: .top, endPoint: .bottom),
+                    shape: RoundedRectangle(cornerRadius: 4))
     .environment(\.userMessageFont, .body.bold())
 }
 
