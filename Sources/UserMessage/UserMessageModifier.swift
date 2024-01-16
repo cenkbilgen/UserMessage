@@ -28,6 +28,9 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
 
     @State private var messages: [UserMessage] = []
 
+    @GestureState var drag: (UserMessage.ID, CGFloat)?
+    @Namespace var ns
+
     public func body(content: Content) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: notificationName)) { notification in
@@ -49,20 +52,40 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                         // messageView(message)
                         messageView(message)
                             .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
-                            .onTapGesture {
-                                messages.removeAll {
-                                    $0 == message
-                                }
-                            }
+                            .matchedGeometryEffect(id: message.id, in: ns, isSource: true)
+                            .gesture(
+                                DragGesture()
+                                .updating($drag, body: { value, state, _ in
+                                    state = (message.id, value.translation.height)
+                                })
+                                .sequenced(before:
+                                            TapGesture()
+                                    .onEnded{
+                                        messages.removeAll {
+                                            $0 == message
+                                        }
+                                    }))
+                            .opacity(drag?.0 == message.id ? 0 : 1)
                             .task {
                                 try? await Task.sleep(for: duration)
                                 messages.removeAll {
                                     $0.id == message.id
                                 }
                             }
+                            .overlay {
+                                if let id = drag?.0, let message = messages.first(where: {
+                                    $0.id == id
+                                }) {
+                                    messageView(message)
+                                        .matchedGeometryEffect(id: id, in: ns)
+                                        .offset(y: drag?.1 ?? .zero)
+                                        .opacity(0.5)
+                                }
+                            }
                     }
                 }
             }
+
             .animation(.spring, value: messages)
     }
 }
@@ -70,7 +93,7 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
 public extension View {
     func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
                                            location: VerticalAlignment = .top,
-                                           duration: Duration = .seconds(6),
+                                           duration: Duration = .seconds(20),
                                            allowDuplicateMessages: Bool = true,
                                            multipleMessageAlignment: HorizontalAlignment = .center,
                                            @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
