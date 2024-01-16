@@ -49,6 +49,11 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                         // messageView(message)
                         messageView(message)
                             .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
+                            .onTapGesture {
+                                messages.removeAll {
+                                    $0 == message
+                                }
+                            }
                             .task {
                                 try? await Task.sleep(for: duration)
                                 messages.removeAll {
