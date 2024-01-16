@@ -48,19 +48,17 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                     ForEach(messages) { message in
                         // messageView(message)
                         messageView(message)
+                            .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
                             .task {
                                 try? await Task.sleep(for: duration)
-                                withAnimation(.spring()) {
-                                    messages.removeAll {
-                                        $0.id == message.id
-                                    }
+                                messages.removeAll {
+                                    $0.id == message.id
                                 }
                             }
                     }
                 }
-                .padding(.horizontal)
-                // .containerRelativeFrame(.horizontal)
             }
+            .animation(.spring, value: messages)
     }
 }
 
@@ -81,7 +79,7 @@ public extension View {
     }
 
     func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
-                                                   backgroundStyles: [UserMessage.Level: any ShapeStyle] = [.info: .bar, .error: .bar],
+                                                   backgroundStyles: [UserMessage.Level: Color] = [.info: .clear, .error: .red],
                                                    location: VerticalAlignment = .top,
                                                    duration: Duration = .seconds(6),
                                                    allowDuplicateMessages: Bool = true,
@@ -92,15 +90,9 @@ public extension View {
                                          duration: duration,
                                          allowDuplicateMessages: allowDuplicateMessages,
                                          multipleMessageAlignment: .center) { message in
-//            if let style = backgroundStyles[message.level] {
                 UserMessageView(text: message.text,
-                                backgroundStyle: .bar, // TODO
+                                backgroundStyle: backgroundStyles[message.level, default: Color.clear],
                                 shape: RoundedRectangle(cornerRadius: 4))
-//            } else {
-//                UserMessageView(text: message.text,
-//                                backgroundStyle: .bar,
-//                                shape: RoundedRectangle(cornerRadius: 4))
-//            }
         })
     }
 }

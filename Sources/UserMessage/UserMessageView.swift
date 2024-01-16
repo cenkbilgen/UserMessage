@@ -22,8 +22,8 @@ public struct UserMessageView<S: Shape, T: ShapeStyle>: View {
         TextView(text: text)
             .padding(.vertical, 4)
             .padding(.horizontal)
-            .background(style)
-            .opacity(0.9)
+            .background(style.opacity(0.9))
+//            .opacity(0.9)
 //            .overlay(shape
 //                .stroke(style, lineWidth: 2))
     }
@@ -47,7 +47,7 @@ public struct UserMessageView<S: Shape, T: ShapeStyle>: View {
 
 #Preview {
     UserMessageView(text: .verbatim(CocoaError(.fileReadNoSuchFile).localizedDescription),
-                    backgroundStyle: .linearGradient(colors: [.green, .green, .green.opacity(0.7)], startPoint: .top, endPoint: .bottom),
+                    backgroundStyle: .red,
                     shape: RoundedRectangle(cornerRadius: 4))
     .environment(\.userMessageFont, .body.bold())
 }

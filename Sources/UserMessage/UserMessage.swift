@@ -45,9 +45,14 @@ public struct UserMessage: Identifiable {
     // public var duration: Duration? // Custom duration per message
 }
 
-extension UserMessage {
+extension UserMessage: Equatable {
     // checks contents, not same as Equatable
     func matches(_ other: UserMessage) -> Bool {
         text == other.text && level == other.level
     }
+
+    static public func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.matches(rhs)
+    }
 }
+
