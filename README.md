@@ -1,6 +1,6 @@
 ## User Message
 
-Display user facing alerts or notifications in SwiftUI.
+Display user facing alert type user messages in SwiftUI.
 
 Usage:
 
@@ -12,12 +12,22 @@ struct SampleApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-                .modifier(ShowUserMessage()) 
+                .showsUserMessages { message in
+                            Text(message.string) // from localized resource
+                                    .padding()
+                                    .background(message.level == .error ? .red : .gray)
+                            }
             }
         }
     }
 }
 ```
+
+Now every time a notificaiton of name `.userMessage` (default) is sent the pop will appear. 
+Multiple types of alerts can be customized in the ViewBuilder or by applying different modifiers listening to different notfication names.
+
+
+There is a `showUser()` convenience extension to `String`, `LocalizedStringResource` and `Error`.
 
 ``` 
 Button("Do Something") {
@@ -30,7 +40,4 @@ Button("Do Something") {
 }
 
 ```
-
-Apply multiple modifiers, such as one for info messages one for error
-
 

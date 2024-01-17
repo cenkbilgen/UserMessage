@@ -16,27 +16,28 @@ public extension Notification.Name {
 let userInfoKey = "UserMessage.message"
 
 public extension Error {
-    func showUser(message: LocalizedStringResource? = nil) {
+    func showUser(notificationName: Notification.Name = .userMessage, 
+                  message: LocalizedStringResource? = nil) {
         let text: UserMessage.TextType = if let message {
             .localized(message)
         } else {
             .verbatim(localizedDescription)
         }
         NotificationCenter.default
-            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: text, level: .error)])
+            .post(name: notificationName, object: nil, userInfo: [userInfoKey: UserMessage(text: text, level: .error)])
     }
 }
 
 public extension String {
-    func showUser() {
+    func showUser(notificationName: Notification.Name = .userMessage, level: UserMessage.Level = .info) {
         NotificationCenter.default
-            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: .verbatim(self), level: .info)])
+            .post(name: notificationName, object: nil, userInfo: [userInfoKey: UserMessage(text: .verbatim(self), level: level)])
     }
 }
 
 public extension LocalizedStringResource {
-    func showUser() {
+    func showUser(notificationName: Notification.Name = .userMessage, level: UserMessage.Level = .info) {
         NotificationCenter.default
-            .post(name: .userMessage, object: nil, userInfo: [userInfoKey: UserMessage(text: .localized(self), level: .info)])
+            .post(name: notificationName, object: nil, userInfo: [userInfoKey: UserMessage(text: .localized(self), level: level)])
     }
 }
