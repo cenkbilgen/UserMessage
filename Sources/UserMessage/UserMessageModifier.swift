@@ -28,8 +28,11 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
 
     @State private var messages: [UserMessage] = []
 
-    @GestureState var drag: (UserMessage.ID, CGFloat)?
-    @Namespace var ns
+    // TODO: Cleanup use gesture state with onEnded transaction for iOS17
+    //@GestureState var drag: (UserMessage.ID, CGFloat)?
+    @State private var draggingMessageID: UserMessage.ID?
+    @State private var dragValue: CGFloat = .zero
+    @State private var swipeValue: CGFloat = .zero
 
     public func body(content: Content) -> some View {
         content
@@ -49,54 +52,66 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
             .overlay(alignment: Alignment(horizontal: multipleMessageAlignment, vertical: location)) {
                 VStack {
                     ForEach(messages) { message in
-                        // messageView(message)
                         messageView(message)
+                            .animation(.none, value: message)
+                            .compositingGroup()
                             .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
-                            .matchedGeometryEffect(id: message.id, in: ns, isSource: true)
                             .gesture(
-                                DragGesture()
-                                .updating($drag, body: { value, state, _ in
-                                    state = (message.id, value.translation.height)
-                                })
-                                .sequenced(before:
-                                            TapGesture()
-                                    .onEnded{
-                                        messages.removeAll {
-                                            $0 == message
+                                DragGesture(coordinateSpace: .local)
+                                //                                        .updating($drag, body: { value, state, transaction in
+                                //                                            transaction.isContinuous = true
+                                //                                            state = (message.id, value.translation.height)
+                                //                                        })
+                                    .onChanged { value in
+                                        draggingMessageID = message.id
+                                        dragValue = value.translation.height
+                                        swipeValue = value.translation.width
+                                    }
+                                    .onEnded { _ in
+                                        defer {
+                                            draggingMessageID = nil
+                                            dragValue = .zero
+                                            swipeValue = .zero
                                         }
-                                    }))
-                            .opacity(drag?.0 == message.id ? 0 : 1)
+                                        if dragValue < -20 || abs(swipeValue) > 20 {
+                                            messages.removeAll {
+                                                $0 == message
+                                            }
+                                        }
+                                    }
+                                    .exclusively(before:
+                                                    TapGesture()
+                                        .onEnded{
+                                            messages.removeAll {
+                                                $0 == message
+                                            }
+                                        })
+                            )
+                        // for now disable left-right swipe dismiss
+                        //                            .offset(x: draggingMessageID == message.id ? ((abs(swipeValue) > abs(dragValue)) ? swipeValue : .zero) : .zero,
+                        //                                    y: draggingMessageID == message.id ? ((abs(swipeValue) < abs(dragValue)) ? dragValue : .zero) : .zero)
+                            .offset(y: draggingMessageID == message.id ? dragValue : .zero)
+                            .animation(.bouncy, value: dragValue)
                             .task {
                                 try? await Task.sleep(for: duration)
                                 messages.removeAll {
                                     $0.id == message.id
                                 }
                             }
-                            .overlay {
-                                if let id = drag?.0, let message = messages.first(where: {
-                                    $0.id == id
-                                }) {
-                                    messageView(message)
-                                        .matchedGeometryEffect(id: id, in: ns)
-                                        .offset(y: drag?.1 ?? .zero)
-                                        .opacity(0.5)
-                                }
-                            }
                     }
                 }
             }
-
             .animation(.spring, value: messages)
     }
 }
 
 public extension View {
     func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
-                                           location: VerticalAlignment = .top,
-                                           duration: Duration = .seconds(20),
-                                           allowDuplicateMessages: Bool = true,
-                                           multipleMessageAlignment: HorizontalAlignment = .center,
-                                           @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
+                                    location: VerticalAlignment = .top,
+                                    duration: Duration = .seconds(20),
+                                    allowDuplicateMessages: Bool = true,
+                                    multipleMessageAlignment: HorizontalAlignment = .center,
+                                    @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
                                          backgroundStyles: [:], // let the customized messageView handle background style
                                          location: location,
@@ -107,20 +122,20 @@ public extension View {
     }
 
     func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
-                                                   backgroundStyles: [UserMessage.Level: Color] = [.info: .clear, .error: .red],
-                                                   location: VerticalAlignment = .top,
-                                                   duration: Duration = .seconds(6),
-                                                   allowDuplicateMessages: Bool = true,
-                                                   multipleMessageAlignment: HorizontalAlignment = .center) -> some View {
+                                    backgroundStyles: [UserMessage.Level: Color] = [.info: .clear, .error: .red],
+                                    location: VerticalAlignment = .top,
+                                    duration: Duration = .seconds(6),
+                                    allowDuplicateMessages: Bool = true,
+                                    multipleMessageAlignment: HorizontalAlignment = .center) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
                                          backgroundStyles: backgroundStyles,
                                          location: location,
                                          duration: duration,
                                          allowDuplicateMessages: allowDuplicateMessages,
                                          multipleMessageAlignment: .center) { message in
-                UserMessageView(text: message.text,
-                                backgroundStyle: backgroundStyles[message.level, default: Color.clear],
-                                shape: RoundedRectangle(cornerRadius: 4))
+            UserMessageView(text: message.text,
+                            backgroundStyle: backgroundStyles[message.level, default: Color.clear],
+                            shape: RoundedRectangle(cornerRadius: 4))
         })
     }
 }
