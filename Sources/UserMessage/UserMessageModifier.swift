@@ -54,8 +54,7 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                     ForEach(messages) { message in
                         messageView(message)
                             .animation(.none, value: message)
-                            .compositingGroup()
-                            .transition(.asymmetric(insertion: .push(from: .top), removal: .push(from: .bottom)))
+                            .transition(.asymmetric(insertion: .push(from: location.edge), removal: .push(from: location.oppositeEdge)))
                             .gesture(
                                 DragGesture(coordinateSpace: .local)
                                 //                                        .updating($drag, body: { value, state, transaction in
@@ -102,6 +101,29 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                 }
             }
             .animation(.spring, value: messages)
+    }
+}
+
+fileprivate extension VerticalAlignment {
+    var edge: Edge {
+        return switch self {
+        case .bottom:
+                .bottom
+        case .top:
+                .top
+        default:
+                .leading
+        }
+    }
+    var oppositeEdge: Edge {
+        return switch self {
+        case .bottom:
+                .top
+        case .top:
+                .bottom
+        default:
+                .trailing
+        }
     }
 }
 
