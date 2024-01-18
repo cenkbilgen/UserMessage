@@ -13,16 +13,18 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public let location: VerticalAlignment
     public let duration: Duration
     public let allowDuplicateMessages: Bool
+    public let maxDisplayedMessageCount: Int
     public let multipleMessageAlignment: HorizontalAlignment
     @ViewBuilder public var messageView: (UserMessage) -> V
 
-    public init(notificationName: Notification.Name, backgroundStyles: [UserMessage.Level : any ShapeStyle], location: VerticalAlignment, duration: Duration, allowDuplicateMessages: Bool, multipleMessageAlignment: HorizontalAlignment, messageView: @escaping (UserMessage) -> V) {
+    public init(notificationName: Notification.Name, backgroundStyles: [UserMessage.Level : any ShapeStyle], location: VerticalAlignment, duration: Duration, allowDuplicateMessages: Bool, maxDisplayedMessageCount: Int, multipleMessageAlignment: HorizontalAlignment, messageView: @escaping (UserMessage) -> V) {
         self.notificationName = notificationName
         self.backgroundStyles = backgroundStyles
         self.location = location
         self.duration = duration
         self.allowDuplicateMessages = allowDuplicateMessages
         self.multipleMessageAlignment = multipleMessageAlignment
+        self.maxDisplayedMessageCount = maxDisplayedMessageCount
         self.messageView = messageView
     }
 
@@ -47,6 +49,9 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                 }) {
                     print("Adding to messages")
                     messages.append(message)
+                    if messages.count > maxDisplayedMessageCount {
+                        messages = Array(messages.dropFirst(messages.count-maxDisplayedMessageCount))
+                    }
                 }
             }
             .overlay(alignment: Alignment(horizontal: multipleMessageAlignment, vertical: location)) {
@@ -99,6 +104,8 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
                             }
                     }
                 }
+                .ignoresSafeArea(.keyboard)
+                .padding([location == .bottom ? .bottom : .top], 20)
             }
             .animation(.spring, value: messages)
     }
@@ -132,6 +139,7 @@ public extension View {
                                     location: VerticalAlignment = .top,
                                     duration: Duration = .seconds(20),
                                     allowDuplicateMessages: Bool = true,
+                                    maxDisplayedMessagesCount: Int = 5,
                                     multipleMessageAlignment: HorizontalAlignment = .center,
                                     @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
@@ -139,6 +147,7 @@ public extension View {
                                          location: location,
                                          duration: duration,
                                          allowDuplicateMessages: allowDuplicateMessages,
+                                         maxDisplayedMessageCount: maxDisplayedMessagesCount,
                                          multipleMessageAlignment: .center,
                                          messageView: messageView))
     }
@@ -148,12 +157,14 @@ public extension View {
                                     location: VerticalAlignment = .top,
                                     duration: Duration = .seconds(6),
                                     allowDuplicateMessages: Bool = true,
+                                    maxDisplayedMessagesCount: Int = 5,
                                     multipleMessageAlignment: HorizontalAlignment = .center) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
                                          backgroundStyles: backgroundStyles,
                                          location: location,
                                          duration: duration,
                                          allowDuplicateMessages: allowDuplicateMessages,
+                                         maxDisplayedMessageCount: maxDisplayedMessagesCount,
                                          multipleMessageAlignment: .center) { message in
             UserMessageView(text: message.text,
                             backgroundStyle: backgroundStyles[message.level, default: Color.clear],
