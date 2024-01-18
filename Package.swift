@@ -5,20 +5,14 @@ import PackageDescription
 
 let package = Package(
     name: "UserMessage",
-    platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v16)],
+    platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v16), .visionOS(.v1)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "UserMessage",
             targets: ["UserMessage"]),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "UserMessage"),
-        .testTarget(
-            name: "UserMessageTests",
-            dependencies: ["UserMessage"]),
     ]
 )

@@ -9,7 +9,6 @@ import SwiftUI
 
 public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public let notificationName: Notification.Name
-    public let backgroundStyles: [UserMessage.Level: any ShapeStyle]
     public let location: VerticalAlignment
     public let duration: Duration
     public let allowDuplicateMessages: Bool
@@ -17,9 +16,8 @@ public struct ShowUserMessageModifier<V: View>: ViewModifier {
     public let multipleMessageAlignment: HorizontalAlignment
     @ViewBuilder public var messageView: (UserMessage) -> V
 
-    public init(notificationName: Notification.Name, backgroundStyles: [UserMessage.Level : any ShapeStyle], location: VerticalAlignment, duration: Duration, allowDuplicateMessages: Bool, maxDisplayedMessageCount: Int, multipleMessageAlignment: HorizontalAlignment, messageView: @escaping (UserMessage) -> V) {
+    public init(notificationName: Notification.Name, location: VerticalAlignment, duration: Duration, allowDuplicateMessages: Bool, maxDisplayedMessageCount: Int, multipleMessageAlignment: HorizontalAlignment, messageView: @escaping (UserMessage) -> V) {
         self.notificationName = notificationName
-        self.backgroundStyles = backgroundStyles
         self.location = location
         self.duration = duration
         self.allowDuplicateMessages = allowDuplicateMessages
@@ -143,7 +141,6 @@ public extension View {
                                     multipleMessageAlignment: HorizontalAlignment = .center,
                                     @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
-                                         backgroundStyles: [:], // let the customized messageView handle background style
                                          location: location,
                                          duration: duration,
                                          allowDuplicateMessages: allowDuplicateMessages,
@@ -152,23 +149,37 @@ public extension View {
                                          messageView: messageView))
     }
 
-    func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
-                                    backgroundStyles: [UserMessage.Level: Color] = [.info: .clear, .error: .red],
-                                    location: VerticalAlignment = .top,
-                                    duration: Duration = .seconds(6),
-                                    allowDuplicateMessages: Bool = true,
-                                    maxDisplayedMessagesCount: Int = 5,
-                                    multipleMessageAlignment: HorizontalAlignment = .center) -> some View {
-        modifier(ShowUserMessageModifier(notificationName: notificationName,
-                                         backgroundStyles: backgroundStyles,
-                                         location: location,
-                                         duration: duration,
-                                         allowDuplicateMessages: allowDuplicateMessages,
-                                         maxDisplayedMessageCount: maxDisplayedMessagesCount,
-                                         multipleMessageAlignment: .center) { message in
-            UserMessageView(text: message.text,
-                            backgroundStyle: backgroundStyles[message.level, default: Color.clear],
-                            shape: RoundedRectangle(cornerRadius: 4))
-        })
+    func showsUserMessages<BR: ShapeStyle>(notificationName: Notification.Name = .userMessage,
+                                           location: VerticalAlignment = .top,
+                                           duration: Duration = .seconds(6),
+                                           allowDuplicateMessages: Bool = true,
+                                           maxDisplayedMessagesCount: Int = 5,
+                                           multipleMessageAlignment: HorizontalAlignment = .center,
+                                           backgroundStyle: some ShapeStyle = Material.regular,
+                                           font: Font = .caption.weight(.medium),
+                                           borderStyles: ([UserMessage.Level: BR], default: BR) = ([.error: .red], default: .gray),
+                                           borderWidth: CGFloat = 2,
+                                           shadowRadius: CGFloat = 4) -> some View {
+        self.showsUserMessages(notificationName: notificationName, location: location, duration: duration, allowDuplicateMessages: allowDuplicateMessages, maxDisplayedMessagesCount: maxDisplayedMessagesCount, multipleMessageAlignment: multipleMessageAlignment) { message in
+            DefaultMessageView(message: message, backgroundStyle: backgroundStyle, font: font, borderStyles: borderStyles, borderWidth: borderWidth, shadowRadius: shadowRadius)
+        }
+    }
+}
+
+struct DefaultMessageView<BK: ShapeStyle, BR: ShapeStyle>: View {
+    let message: UserMessage
+    let backgroundStyle: BK
+    let font: Font
+    let borderStyles: ([UserMessage.Level: BR], default: BR)
+    let borderWidth: CGFloat
+    let shadowRadius: CGFloat
+    var body: some View {
+        Text(message.string)
+            .font(font)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(backgroundStyle.shadow(.drop(radius: shadowRadius)))
+            .border(borderStyles.0[message.level, default: borderStyles.default], width: borderWidth)
+            .padding(.horizontal)
     }
 }
