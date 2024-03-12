@@ -133,13 +133,13 @@ fileprivate extension VerticalAlignment {
 }
 
 public extension View {
-    func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
+    func showsUserMessages(notificationName: Notification.Name = .userMessage,
                                     location: VerticalAlignment = .top,
-                                    duration: Duration = .seconds(20),
+                                    duration: Duration = .seconds(6),
                                     allowDuplicateMessages: Bool = true,
                                     maxDisplayedMessagesCount: Int = 5,
                                     multipleMessageAlignment: HorizontalAlignment = .center,
-                                    @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {
+                                    @ViewBuilder messageView: @escaping (UserMessage) -> some View) -> some View {
         modifier(ShowUserMessageModifier(notificationName: notificationName,
                                          location: location,
                                          duration: duration,
@@ -149,7 +149,7 @@ public extension View {
                                          messageView: messageView))
     }
 
-    func showsUserMessages<BR: ShapeStyle>(notificationName: Notification.Name = .userMessage,
+    func showsUserMessages<Border: ShapeStyle>(notificationName: Notification.Name = .userMessage,
                                            location: VerticalAlignment = .top,
                                            duration: Duration = .seconds(6),
                                            allowDuplicateMessages: Bool = true,
@@ -157,7 +157,7 @@ public extension View {
                                            multipleMessageAlignment: HorizontalAlignment = .center,
                                            backgroundStyle: some ShapeStyle = Material.regular,
                                            font: Font = .caption.weight(.medium),
-                                           borderStyles: ([UserMessage.Level: BR], default: BR) = ([.error: .red], default: .gray),
+                                           borderStyles: ([UserMessage.Level: Border], default: Border) = ([.error: .red], default: .green),
                                            borderWidth: CGFloat = 2,
                                            shadowRadius: CGFloat = 4) -> some View {
         self.showsUserMessages(notificationName: notificationName, location: location, duration: duration, allowDuplicateMessages: allowDuplicateMessages, maxDisplayedMessagesCount: maxDisplayedMessagesCount, multipleMessageAlignment: multipleMessageAlignment) { message in
@@ -166,11 +166,11 @@ public extension View {
     }
 }
 
-struct DefaultMessageView<BK: ShapeStyle, BR: ShapeStyle>: View {
+struct DefaultMessageView<Background: ShapeStyle, Border: ShapeStyle>: View {
     let message: UserMessage
-    let backgroundStyle: BK
+    let backgroundStyle: Background
     let font: Font
-    let borderStyles: ([UserMessage.Level: BR], default: BR)
+    let borderStyles: ([UserMessage.Level: Border], default: Border)
     let borderWidth: CGFloat
     let shadowRadius: CGFloat
     var body: some View {
