@@ -29,7 +29,7 @@ do {
 Any time a notification named `.userMessage` is received the modifier will display the pop-up alert. 
 The `showUser()` extension for `String`, `LocalizedStringResource` and `Error` is just a convenience.
 
-<img src="https://github.com/cenkbilgen/UserMessage/assets/6772018/54d126dd-30da-490e-b909-2068721a4c2c"  loop=infinite />
+![UserMessage Demo](https://github.com/cenkbilgen/UserMessage/assets/6772018/99ec8877-8ba8-49da-8af8-77554a92980d)
 
 ---
 
