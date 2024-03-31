@@ -10,7 +10,7 @@ struct SampleApp: App {
     var body: some Scene {
         WindowGroup {
             MainView()
-                .showUserMessage()            
+                .showUserMessages()            
         }
     }
 }
@@ -18,13 +18,11 @@ struct SampleApp: App {
 
 Then call `showUser()` to overlay a pop-up alert.
 ```swift 
-Button("Do Something") {
-    do {
-      try await doSomething()
-      "Did Something".showUser()
-    } catch {
-      error.showUser()
-    }
+do {
+    try await doSomething()
+    "Did Something".showUser()
+} catch {
+    error.showUser()
 }
 ```
 
