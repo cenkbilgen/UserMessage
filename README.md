@@ -27,8 +27,9 @@ do {
 ```
 
 Any time a notification named `.userMessage` is received the modifier will display the pop-up alert. 
-The `showUser()` extension for `String`, `LocalizedStringResource` and `Error` is just a convenience. 
+The `showUser()` extension for `String`, `LocalizedStringResource` and `Error` is just a convenience.
 
+<img src="https://github.com/cenkbilgen/UserMessage/assets/6772018/54d126dd-30da-490e-b909-2068721a4c2c"  loop=infinite />
 
 ---
 
@@ -39,29 +40,34 @@ The modifier has two forms that take different arguments, one uses a default rec
 
 1. Default Message View
 ```swift
-func showsUserMessages<B: ShapeStyle>(notificationName: Notification.Name = .userMessage,
-                                           location: VerticalAlignment = .top,
-                                           duration: Duration = .seconds(6),
-                                           allowDuplicateMessages: Bool = true,
-                                           maxDisplayedMessagesCount: Int = 5,
-                                           multipleMessageAlignment: HorizontalAlignment = .center,
-                                           backgroundStyle: some ShapeStyle = Material.regular,
-                                           font: Font = .caption.weight(.medium),
-                                           borderStyles: ([UserMessage.Level: B], default: B) = ([.error: .red], default: .gray),
-                                           borderWidth: CGFloat = 2,
-                                           shadowRadius: CGFloat = 4) -> some View {}
+func showsUserMessages<Border: ShapeStyle>(
+  notificationName: Notification.Name = .userMessage,
+  location: VerticalAlignment = .top,
+  duration: Duration = .seconds(6),
+  allowDuplicateMessages: Bool = true,
+  maxDisplayedMessagesCount: Int = 5,
+  multipleMessageAlignment: HorizontalAlignment = .center,
+  backgroundStyle: some ShapeStyle = Material.regular,
+  font: Font = .caption.weight(.medium),
+  borderStyles: ([UserMessage.Level: Border], default: Border) = ([.error: .red], default: .gray),
+  borderWidth: CGFloat = 2,
+  shadowRadius: CGFloat = 4) -> some View {}
+)
 ```
 
 2. Custom Message View   
 ```swift
-func showsUserMessages<V: View>(notificationName: Notification.Name = .userMessage,
-                                location: VerticalAlignment = .top,
-                                duration: Duration = .seconds(6),
-                                allowDuplicateMessages: Bool = true,
-                                maxDisplayedMessagesCount: Int = 5,
-                                multipleMessageAlignment: HorizontalAlignment = .center,
-                                @ViewBuilder messageView: @escaping (UserMessage) -> V) -> some View {}
+func showsUserMessages(
+  notificationName: Notification.Name = .userMessage,
+  location: VerticalAlignment = .top,
+  duration: Duration = .seconds(6),
+  allowDuplicateMessages: Bool = true,
+  maxDisplayedMessagesCount: Int = 5,
+  multipleMessageAlignment: HorizontalAlignment = .center,
+  @ViewBuilder messageView: @escaping (UserMessage) -> some View) -> some View = {}
+)
 ```
+
 ```swift
 MainView()
     .showsUserMessages { message: UserMessage in
