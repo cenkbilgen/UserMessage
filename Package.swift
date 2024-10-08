@@ -13,6 +13,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "UserMessage"),
+            name: "UserMessage",
+            swiftSettings: [
+                .unsafeFlags(["-warnings-as-errors"]),
+                .enableUpcomingFeature("StrictConcurrency"),
+            ])
     ]
 )
