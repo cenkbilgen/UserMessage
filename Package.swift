@@ -14,9 +14,8 @@ let package = Package(
     targets: [
         .target(
             name: "UserMessage",
-            swiftSettings: [
-                .unsafeFlags(["-warnings-as-errors"]),
-                .enableUpcomingFeature("StrictConcurrency"),
+ 	    swiftSettings: [
+                .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ])
     ]
 )
