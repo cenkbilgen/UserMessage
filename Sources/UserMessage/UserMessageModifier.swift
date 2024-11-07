@@ -177,7 +177,7 @@ struct DefaultMessageView<Background: ShapeStyle, Border: ShapeStyle>: View {
         Text(message.string)
             .font(font)
             .padding()
-            .frame(maxWidth: .infinity)
+            //.frame(maxWidth: .infinity)
             .background(backgroundStyle.shadow(.drop(radius: shadowRadius)))
             .border(borderStyles.0[message.level, default: borderStyles.default], width: borderWidth)
             .padding(.horizontal)
